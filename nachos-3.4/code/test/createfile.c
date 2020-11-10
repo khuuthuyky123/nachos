@@ -4,11 +4,11 @@
 #define maxlen 32
 int main()
 {
-	/*
+	
 	int len;
 	char filename[maxlen +1];
 	//Create a file
-	if (Create("text.txt") == -1)
+	if (Create("text123456789.txt") == -1)
 	{
 	// xuất thông báo lỗi tạo tập tin
 		//PrintString("\nCreate file fail");
@@ -17,8 +17,5 @@ int main()
 	{
 		//PrintString("\nCreate file success");
 	}
-	//Halt();
-	*/
-	Create("text.txt");
-
+	Halt();
 }

@@ -154,7 +154,7 @@ void ExceptionHandler(ExceptionType which)
 					DEBUG('a', "Shutdown, initiated by user program.\n");
 					printf("\nShutdown, initiated by user program.\n");
 					interrupt->Halt();
-					return;
+					break;
 				}	
 				case SC_Create:
 				{
@@ -177,8 +177,8 @@ void ExceptionHandler(ExceptionType which)
 						machine->WriteRegister(2,-1); // trả về lỗi cho chương
 						// trình người dùng
 						delete filename;
-						interrupt->Halt();
-						return;
+						
+						break;
 					}
 					
 					DEBUG('a',"\n Finish reading filename.");
@@ -195,16 +195,16 @@ void ExceptionHandler(ExceptionType which)
 						printf("\n Error create file '%s'",filename);
 						machine->WriteRegister(2,-1);
 						delete filename;
-						interrupt->Halt();
-						return;
+						
+						break;
 					}
 					
 					machine->WriteRegister(2,0); // trả về cho chương trình
 					
 					// người dùng thành công
 					delete filename;
-					interrupt->Halt();
-					return;
+					
+					break;
 				}	
 				case SC_Exit:
 					break;
@@ -235,30 +235,29 @@ void ExceptionHandler(ExceptionType which)
 					
 				case SC_PrintString:
 				{
-					int virtAddr;
-					int length;
-					char* buffer;
-					length = 0;
-					// Lấy tham số tên tập tin từ thanh ghi r4
-					virtAddr = machine->ReadRegister(4);
+					// int virtAddr;
+					// int length;
+					// char* buffer;
+					// length = 0;
+					// // Lấy tham số tên tập tin từ thanh ghi r4
+					// virtAddr = machine->ReadRegister(4);
 
-					buffer = User2System(virtAddr,255);
-					while (buffer[length]!=0) length++;
+					// buffer = User2System(virtAddr,255);
+					// while (buffer[length]!=0) length++;
 					
-					//gSynchConsole->Write(buffer,length+1);
-					// người dùng thành công
-					delete buffer;
-					interrupt->Halt();
-					return;
+					// gSynchConsole->Write(buffer,length+1);
+					// // người dùng thành công
+					// delete buffer;
+					
+					// break;
 				}
 				default:
 				{
 					printf("\n Unexpected user mode exception (%d %d)", which,type);
-					interrupt->Halt();
-					return;
+					
+					break;
 				}
 			}
-
 			IncreasePC();
 		}	
 		
