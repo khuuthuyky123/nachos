@@ -225,6 +225,66 @@ void ExceptionHandler(ExceptionType which)
 					break;
 					
 				case SC_Close:
+					//void Close(OpenFileId id);
+					int file_id = machine->ReadRegister(4);
+					if (file_id >=0 && file_id <=14)
+					{
+				    		if (fileSystem->openf[file_id] == true)
+		 	   			{
+							delete fileSystem->openf[file_id];
+							fileSystem->openf[fid] = NULL;
+							machine->WriteRegister(2, 0);
+							break;
+		    				}
+					}
+					machine->WriteRegister(2, -1);
+				break;
+	    			
+				case SC_Seek:
+	    			{
+					//int Seek(int pos, OpenFileId id)
+					int pos = machine->ReadRegister(4);
+					int id = machine->ReadRegister(5);
+					//Kiem tra id truyen vao
+					if (id < 0 || id > 14)
+					{
+						printf("\nKhong the seek vi id nam ngoai bang mo ta file.");
+			    			machine->WriteRegister(2, -1);
+		    				IncreasePC();
+		    				return;
+					}
+					//Kiem tra file co ton tai
+					if (fileSystem->openf[id] == NULL)
+					{
+					    	printf("\nKhong the seek vi file nay khong ton tai.");
+		 			   	machine->WriteRegister(2, -1);
+		    				IncreasePC();
+		    				return;
+					}
+					//Kiem tra co goi Seek tren console khong
+					if (id == 0 || id == 1)
+					{
+		   	 			printf("\nKhong the seek tren file console.");
+		    				machine->WriteRegister(2, -1);
+		    				IncreasePC();
+		    				return;
+					}
+					if (pos == -1)
+		    				pos = fileSystem->openf[id]->Length();
+					if (pos > fileSystem->openf[id]->Length() || pos < 0)
+					{
+		    				printf("\nKhong the seek file den vi tri nay.");
+		    				machine->WriteRegister(2, -1);
+					}
+					else
+					{
+		    				fileSystem->openf[id]->Seek(pos);
+		    				machine->WriteRegister(2, pos);
+					}
+					IncreasePC();
+					return;
+
+ 	    			}
 					break;
 					
 				case SC_Fork:
