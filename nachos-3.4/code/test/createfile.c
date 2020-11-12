@@ -11,11 +11,11 @@ int main()
 	if (Create("text123456789.txt") == -1)
 	{
 	// xuất thông báo lỗi tạo tập tin
-		//PrintString("\nCreate file fail");
+		PrintString("\nCreate file fail");
 	}
 	else
 	{
-		//PrintString("\nCreate file success");
+		PrintString("\nCreate file success");
 	}
 	Halt();
 }

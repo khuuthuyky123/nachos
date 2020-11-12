@@ -28,13 +28,7 @@
 					// See definitions listed under #else
 class OpenFile {
   public:
-    int type;
-    int Seek(int pos)
-    {
-	Lseek(file, pos, 0);
-	currentOffset = Tell(file);
-	return currentOffset;
-    }
+    
     OpenFile(int f) { file = f; currentOffset = 0; }	// open the file
     ~OpenFile() { Close(file); }			// close the file
 
@@ -58,20 +52,7 @@ class OpenFile {
 		return numWritten;
 		}
 
-    //int Length() { Lseek(file, 0, 2); return Tell(file); }
-    int Length()
-    {
-	int lenngth;
-	Lseek(file, 0, 2);
-	length = Tell(file);
-	Lseek(file, currentOffset, 0);
-	return length;
-    }
-    int GetCurrentPos() 
-    {
-    	currentOffset = Tell(file);
-	return currentOffset;
-    }
+    int Length() { Lseek(file, 0, 2); return Tell(file); }
   private:
     int file;
     int currentOffset;

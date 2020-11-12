@@ -29,7 +29,6 @@
 #define SC_Close		8
 #define SC_Fork			9
 #define SC_Yield		10
-#define SC_Sub			11
 #define SC_ReadInt  	12
 #define SC_PrintInt 	13
 #define SC_ReadString 	14
@@ -39,6 +38,7 @@
 #define SC_Help 		18
 #define SC_Sort 		19
 #define SC_Ascii 		20
+#define SC_Seek 		21
 
 #ifndef IN_ASM
 

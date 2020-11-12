@@ -3,6 +3,6 @@
 
 int main()
 {
-	//PrintString("aaaaaaaaaaaa");
+	PrintString("aaaaaaaaaaaa");
 	return 0;
 }
