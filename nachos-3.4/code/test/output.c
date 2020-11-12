@@ -3,6 +3,8 @@
 
 int main()
 {
-	PrintString("aaaaaaaaaaaa");
+	//PrintString("aaaaaaaaaaaa");
+	int a = ReadInt();
+	PrintInt(a);
 	return 0;
 }
