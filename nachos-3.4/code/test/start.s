@@ -138,6 +138,14 @@ Seek:
 	j	$31
 	.end Seek
 
+	.globl ReadInt
+	.ent ReadInt
+ReadInt:
+	addiu $2,$0,SC_ReadInt
+	syscall
+	j	$31
+	.end ReadInt
+
 	.globl PrintInt
 	.ent PrintInt
 PrintInt:
