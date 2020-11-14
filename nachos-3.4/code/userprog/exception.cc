@@ -99,6 +99,37 @@ void IncreasePC()
 	machine->WriteRegister(NextPCReg, counter + 4);
 }
 
+int Str2Int(char* buffer, int length)
+{
+	int num = 0;
+	for (int i =0 ; i<length;i++)
+	{
+		num = num*10 +(int)(buffer[i]-48);
+	}
+	return num;
+}
+
+char* Int2Str(int num)
+{
+	int length =0;
+	char* str1 = new char[256];
+	while (num!=0)
+	{
+		str1[length++] = (num%10+'0');
+		num=num/10;
+		if (num==0) 
+		break;
+	}
+	char* str = new char[length+1];
+	str[length]=0;
+	for (int i = 0; i<length; i++)
+	{
+		str[i]=str1[length-1-i];
+	}
+	delete str1;
+	return str;
+}
+
 void ExceptionHandler(ExceptionType which)
 {
 	int type = machine->ReadRegister(2);
@@ -334,15 +365,31 @@ void ExceptionHandler(ExceptionType which)
 			gSynchConsole->Write(buffer, length + 1);
 			// nguoi dung thanh cong
 			delete buffer;
-
 			break;
 		}
 		
 		case SC_ReadInt:
+		{
+			char *buffer= new char[256];
+			int length = gSynchConsole->Read(buffer,255);
+			int num = Str2Int(buffer,length);
+			machine->WriteRegister(2,num);
+			delete buffer;
 			break;
-
+		}
 		case SC_PrintInt:
+		{	
+			int num;
+			int length=0;
+			char *buffer;
+			num = machine->ReadRegister(4);
+			buffer = Int2Str(num);
+			while (buffer[length] != 0)
+				length++;
+			gSynchConsole->Write(buffer, length+1);
+			delete buffer;
 			break;
+		}
 
 		case SC_ReadChar:
 			break;
