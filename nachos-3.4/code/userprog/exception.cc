@@ -392,10 +392,50 @@ void ExceptionHandler(ExceptionType which)
 		}
 
 		case SC_ReadChar:
+		{
+
+			//Input: Khong co
+			//Output: Duy nhat 1 ky tu (char)
+			//Cong dung: Doc mot ky tu tu nguoi dung nhap
+			int maxBytes = 255;
+			char* buffer = new char[255];
+			int numBytes = gSynchConsole->Read(buffer, maxBytes);
+
+			if(numBytes > 1) //Neu nhap nhieu hon 1 ky tu thi khong hop le
+			{
+				printf("Chi duoc nhap duy nhat 1 ky tu!");
+				DEBUG('a', "\nERROR: Chi duoc nhap duy nhat 1 ky tu!");
+				machine->WriteRegister(2, 0);
+			}
+			else if(numBytes == 0) //Ky tu rong
+			{
+				printf("Ky tu rong!");
+				DEBUG('a', "\nERROR: Ky tu rong!");
+				machine->WriteRegister(2, 0);
+			}
+			else
+			{
+				//Chuoi vua lay co dung 1 ky tu, lay ky tu o index = 0, return vao thanh ghi R2
+				char c = buffer[0];
+				machine->WriteRegister(2, c);
+			}
+
+			delete buffer;
+			//IncreasePC(); // error system
+			//return;
 			break;
+		}
 
 		case SC_PrintChar:
-			break; 
+		{
+			// Input: Ki tu(char)
+			// Output: Ki tu(char)
+			// Cong dung: Xuat mot ki tu la tham so arg ra man hinh
+			char c = (char)machine->ReadRegister(4); // Doc ki tu tu thanh ghi r4
+			gSynchConsole->Write(&c, 1); // In ky tu tu bien c, 1 byte
+			//IncreasePC();
+			break;
+		}
 		
 		case SC_Ascii:{
 			for (int i = 0; i <256; i++){
