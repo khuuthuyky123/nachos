@@ -104,8 +104,7 @@ int Str2Int(char* buffer, int length)
 	int num = 0;
 	for (int i =0 ; i<length;i++)
 	{
-		num*=10;
-		num+=(int)(buffer[i]-'0');
+		num = num*10 +(int)(buffer[i]-48);
 	}
 	return num;
 }
@@ -122,7 +121,7 @@ char* Int2Str(int num)
 		break;
 	}
 	char* str = new char[length+1];
-	str1[length]=0;
+	str[length]=0;
 	for (int i = 0; i<length; i++)
 	{
 		str[i]=str1[length-1-i];
@@ -296,11 +295,9 @@ void ExceptionHandler(ExceptionType which)
 		
 		case SC_ReadInt:
 		{
-			int num=0;
-			char *buffer;
-			buffer = new char[256];
+			char *buffer= new char[256];
 			int length = gSynchConsole->Read(buffer,255);
-			num = Str2Int(buffer,length);
+			int num = Str2Int(buffer,length);
 			machine->WriteRegister(2,num);
 			delete buffer;
 			break;
