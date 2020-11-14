@@ -16,8 +16,6 @@
 #include "stats.h"
 #include "timer.h"
 #include "bitmap.h"
-#include "stable.h"
-#include "ptable.h"
 
 // Initialization and cleanup routines
 extern void Initialize(int argc, char **argv); 	// Initialization,
