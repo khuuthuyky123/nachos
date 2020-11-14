@@ -227,11 +227,67 @@ void ExceptionHandler(ExceptionType which)
 		case SC_Write:
 			break;
 
-		case SC_Close:
+		case SC_Close:{
+			int fileId = machine->ReadRegister(4);
+			if (0 <= fileId && fileId <= 10){
+				if (fileSystem->open_file[fileId]){
+					delete fileSystem->open_file[fileId];
+					fileSystem->open_file[fileId] = NULL;
+					machine->WriteRegister(2, 0);
+					break;
+				}
+			}
+			machine->WriteRegister(2, -1);
 			break;
+		}
 
-		case SC_Seek:
+		case SC_Seek:{
+			int pos = machine->Readregister(4);
+			int id = machine->Readregister(5);
+
+			//Kiem tra su ton tai cua file
+			if (fileSystem->open_file[id] == NULL){
+				printf("\nKhong the seek vi file khong ton tai.");
+				machine->WriteRegister(2, -1);
+				IncreasePC();
+				return;
+			}
+			
+			//Kiem tra id file nam trong bang mo ta file khong
+			if (id < 0 || id > 10){
+				printf("\nKhong the seek vi id nam ngoai bang mo ta file.");
+				machine->WriteRegister(2, -1);
+				IncreasePC();
+				return;
+			} 
+			
+			//Kiem tra co goi Seek tren console khong
+			if (id == 0 || id == 1){
+				printf("\nKhong the seek tren file console.");
+				machine->WriteRegister(2, -1);
+				IncreasePC();
+				return;
+			}
+
+			//Neu pos = -1  thi gan pos = Length, neu khong thi giu nguyen pos
+			if (pos == -1){
+				pos = fileSystem->open_file[id]->Length();
+			}
+
+			//Kiem tra su hop le cua pos
+			if (pos > fileSystem->open_file[id]->Length() || pos < 0){
+				prinf("\nKhong the seek file den vi tri nay.");
+				machine->WriteRsgister(2, -1);
+			}
+			//Tra ve vi tri di chuyen thuc su trong file
+			else{
+				fileSystem->open_file[id]->Seek(pos);
+				machine->WriteRegister(2, pos);
+			}
+			IncreasePC();
 			break;
+		}
+			
 
 		case SC_Fork:
 			break;
@@ -239,24 +295,44 @@ void ExceptionHandler(ExceptionType which)
 		case SC_Yield:
 			break;
 
-		case SC_ReadString:
+		case SC_ReadString:{
+			int virtAddr, length;
+			char* buffer;
+			// Lay tham so ten tap tin to thanh ghi r4
+			virtAddr = machine->ReadRegister(4);
+			
+			// Lay do dai toi da cua chuoi nhap vao thu thanh ghi r5
+			length = machine->ReadRegister(5);
+			
+			//Copy chuoi tu User Space sang System Space
+			buffer = User2System(virtAddr, length);
+			
+			//Doc chuoi
+			gSynchConsole->Read(buffer, length);
+			delete buffer;
+			IncreasePC();
 			break;
+		}
+			
 
 		case SC_PrintString:
 		{
-			int virtAddr;
-			int length;
+			int virtAddr, length;
 			char *buffer;
 			length = 0;
-			// Lấy tham số tên tập tin từ thanh ghi r4
+			// Lay tham so ten tap tin to thanh ghi r4
 			virtAddr = machine->ReadRegister(4);
-
+			
+			//Copy chuoi tu User Space sang System Space
 			buffer = User2System(virtAddr, 255);
+			
+			//Tinh do dai that cua chuoi
 			while (buffer[length] != 0)
 				length++;
 
+			//In chuoi
 			gSynchConsole->Write(buffer, length + 1);
-			// người dùng thành công
+			// nguoi dung thanh cong
 			delete buffer;
 
 			break;
@@ -274,8 +350,13 @@ void ExceptionHandler(ExceptionType which)
 		case SC_PrintChar:
 			break; 
 		
-		case SC_Ascii:
+		case SC_Ascii:{
+			for (int i = 0; i <256; i++){
+				printf("%c ", char(i));
+			}
 			break;
+		}
+			
 
 		case SC_Help:
 			break;

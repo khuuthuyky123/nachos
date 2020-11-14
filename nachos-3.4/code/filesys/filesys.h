@@ -38,12 +38,35 @@
 #include "copyright.h"
 #include "openfile.h"
 
+typedef int OpenFileID;
 #ifdef FILESYS_STUB 		// Temporarily implement file system calls as 
 				// calls to UNIX, until the real file system
 				// implementation is available
+
 class FileSystem {
   public:
-    FileSystem(bool format) {}
+	OpenFile** open_file;
+	int index;
+
+    FileSystem(bool format) {
+		open_file = new OpenFile*[15];
+		index = 0;
+		for (int i = 0; i< 15; ++i){
+			open_file[i] = NULL;
+		}
+		this->Create("stdin", 0);
+		this->Create("stdout", 0);
+		open_file[index++] = this->Open("stdin", 2);
+		open_file[index++] = this->Open("stdout", 3);
+	}
+
+	~FileSystem(){
+		for (int i = 0; i < 15; ++i){
+			if (open_file[i] != NULL)
+				delete open_file[i];
+		}
+		delete[] open_file;
+	}
 
     bool Create(char *name, int initialSize) { 
 	int fileDescriptor = OpenForWrite(name);

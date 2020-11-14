@@ -163,6 +163,8 @@ void Ascii();
 /* Hàm in ra giới thiệu cơ bản về nhóm và mô tả chương trình sort và ascii*/
 void Help();
 
+int Seek(int pos, OpenFileId id);
+
 #endif /* IN_ASM */
 
 #endif /* SYSCALL_H */
