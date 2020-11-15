@@ -29,16 +29,13 @@
 #define SC_Close		8
 #define SC_Fork			9
 #define SC_Yield		10
+#define SC_Seek 		11
 #define SC_ReadInt  	12
 #define SC_PrintInt 	13
 #define SC_ReadString 	14
 #define SC_PrintString  15
 #define SC_ReadChar  	16
 #define SC_PrintChar 	17
-#define SC_Help 		18
-#define SC_Sort 		19
-#define SC_Ascii 		20
-#define SC_Seek 		21
 
 #ifndef IN_ASM
 
@@ -153,15 +150,6 @@ void ReadString(char buffer[], int length);
 
 /* Hàm xuất chuỗi ra màn hình */
 void PrintString(char buffer[]);
-
-/* Hàm sắp xếp mảng số nguyên */
-void Sort(int array[], int length);
-
-/* Hàm in ra bảng mã ascii*/
-void Ascii();
-
-/* Hàm in ra giới thiệu cơ bản về nhóm và mô tả chương trình sort và ascii*/
-void Help();
 
 #endif /* IN_ASM */
 

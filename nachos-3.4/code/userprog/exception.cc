@@ -25,6 +25,8 @@
 #include "system.h"
 #include "syscall.h"
 #define MaxFileLength 32
+#define MAXINT 2147483647
+#define MININT -2147483648
 //----------------------------------------------------------------------
 // ExceptionHandler
 // 	Entry point into the Nachos kernel.  Called when a user program
@@ -98,21 +100,104 @@ void IncreasePC()
 	machine->WriteRegister(PCReg, counter);
 	machine->WriteRegister(NextPCReg, counter + 4);
 }
-
-int Str2Int(char* buffer, int length)
+char* Int2Str(int num);
+int Str2Int(char* buffer, int length,int* error)
 {
 	int num = 0;
-	for (int i =0 ; i<length;i++)
+	int curPos = 0;
+	int startPos = 0;
+	int sign = 0;
+	char* limit;
+	*error = 0;
+	
+	if (buffer[0]=='-')
 	{
-		num = num*10 +(int)(buffer[i]-48);
+		startPos = 1;
+		curPos = 1;
+		sign = 1;
 	}
+	else 
+		if (buffer[0]=='+')
+		{
+			startPos = 1;
+			curPos = 1;
+			sign = 0;
+		}
+
+	while (buffer[curPos]>='0' && buffer[curPos]<='9')
+		curPos++;
+	
+	if (curPos < length)
+	{
+		*error = 2;
+	}
+	else
+	{
+		if ((startPos==0 && length>10 && sign==0) || (startPos==1 && length>11 && sign==1))
+			*error =1;
+		else 
+		{
+			if ((startPos==1 && length==11) || (startPos==0 && length==10))
+			{
+				if (sign)
+					limit = Int2Str(MININT);
+				else 
+					limit = Int2Str(MAXINT);
+				
+				for (curPos=startPos ; curPos<length ; curPos++)
+				{
+					if ((buffer[curPos]-'0')>(limit[curPos+(sign-length+10)*1]-'0'))
+						*error = 1;
+				}
+				delete limit;
+			}
+			if (*error ==0)
+			{
+				for (curPos=startPos ; curPos<length ; curPos++)
+				{
+					num = num*10 +(int)(buffer[curPos]-48);
+				}
+			}
+		}
+	}
+
+	if (*error!=0) 
+		return 0;
+	if (sign)
+		return (num*(-1));
 	return num;
 }
 
 char* Int2Str(int num)
 {
 	int length =0;
+	int sign = 0;
 	char* str1 = new char[256];
+	if (num==MININT)
+	{
+		delete str1;
+		char* str = new char[12];
+		str[0]='-'; str[1]='2'; str[2]='1'; str[3]='4'; str[4] = '7'; str[5] = '4'; str[6]= '8'; 
+		str[7]='3'; str[8]='6'; str[9]='4'; str[10]='8'; str[11]=0;
+		return str;
+	}
+	if (num<0)
+	{
+		length = 1;
+		sign = 1;
+		str1[0]='-';
+		num *=-1;
+	}
+	else 
+		if (num==0)
+		{	
+			delete str1;
+			char* str = new char[2];
+			str[0]='0';
+			str[1]=0;
+			return str;
+		}
+		
 	while (num!=0)
 	{
 		str1[length++] = (num%10+'0');
@@ -122,12 +207,18 @@ char* Int2Str(int num)
 	}
 	char* str = new char[length+1];
 	str[length]=0;
-	for (int i = 0; i<length; i++)
+
+	if (sign==1)
+		str[0]=str1[0];
+
+	for (int i = sign; i<length; i++)
 	{
-		str[i]=str1[length-1-i];
+		str[i]=str1[length-1 +sign - i];
 	}
+
 	delete str1;
 	return str;
+		
 }
 
 void ExceptionHandler(ExceptionType which)
@@ -270,8 +361,24 @@ void ExceptionHandler(ExceptionType which)
 		case SC_Yield:
 			break;
 
-		case SC_ReadString:
+		case SC_ReadString:{
+			int virtAddr, length;
+			char* buffer;
+			// Lay tham so ten tap tin to thanh ghi r4
+			virtAddr = machine->ReadRegister(4);
+			
+			// Lay do dai toi da cua chuoi nhap vao thu thanh ghi r5
+			length = machine->ReadRegister(5);
+			
+			//Copy chuoi tu User Space sang System Space
+			buffer = User2System(virtAddr, length);
+			
+			//Doc chuoi
+			gSynchConsole->Read(buffer, length);
+
+			delete buffer;
 			break;
+		}
 
 		case SC_PrintString:
 		{
@@ -295,13 +402,20 @@ void ExceptionHandler(ExceptionType which)
 		
 		case SC_ReadInt:
 		{
+			int *error = new int;
 			char *buffer= new char[256];
 			int length = gSynchConsole->Read(buffer,255);
-			int num = Str2Int(buffer,length);
+			int num = Str2Int(buffer,length,error);
+			if (*error==1)
+				printf("\nSo nguyen nhap vao phai nam trong khoang [%d,%d]\n",MININT,MAXINT);
+			if (*error==2)
+				printf("\nChuoi so nguyen vua nhap co chua ki tu. Vui long nhap so nguyen 4 bytes hop le\n");
 			machine->WriteRegister(2,num);
 			delete buffer;
+			delete error;
 			break;
 		}
+		
 		case SC_PrintInt:
 		{	
 			int num;
@@ -317,19 +431,51 @@ void ExceptionHandler(ExceptionType which)
 		}
 
 		case SC_ReadChar:
+		{
+		//Input: Khong co
+			//Output: Duy nhat 1 ky tu (char)
+			//Cong dung: Doc mot ky tu tu nguoi dung nhap
+			int maxBytes = 255;
+			char* buffer = new char[255];
+			int numBytes = gSynchConsole->Read(buffer, maxBytes);
+
+			if(numBytes > 1) //Neu nhap nhieu hon 1 ky tu thi khong hop le
+			{
+				printf("Chi duoc nhap duy nhat 1 ky tu!");
+				DEBUG('a', "\nERROR: Chi duoc nhap duy nhat 1 ky tu!");
+				machine->WriteRegister(2, 0);
+			}
+			else if(numBytes == 0) //Ky tu rong
+			{
+				printf("Ky tu rong!");
+				DEBUG('a', "\nERROR: Ky tu rong!");
+				machine->WriteRegister(2, 0);
+			}
+			else
+			{
+				//Chuoi vua lay co dung 1 ky tu, lay ky tu o index = 0, return vao thanh ghi R2
+				char c = buffer[0];
+				machine->WriteRegister(2, c);
+			}
+
+			delete buffer;
+			//IncreasePC(); // error system
+			//return;
 			break;
+		}
 
 		case SC_PrintChar:
-			break; 
+		{
+			// Input: Ki tu(char)
+			// Output: Ki tu(char)
+			// Cong dung: Xuat mot ki tu la tham so arg ra man hinh
+			char c = (char)machine->ReadRegister(4); // Doc ki tu tu thanh ghi r4
+			gSynchConsole->Write(&c, 1); // In ky tu tu bien c, 1 byte
+			//IncreasePC();
+			break;
+
+		}
 		
-		case SC_Ascii:
-			break;
-
-		case SC_Help:
-			break;
-
-		case SC_Sort:
-			break;
 		default:
 		{
 			printf("\n Unexpected user mode exception (%d %d)", which, type);
