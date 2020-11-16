@@ -78,13 +78,13 @@ sort: sort.o start.o
 	$(LD) $(LDFLAGS) start.o sort.o -o sort.coff
 	../bin/coff2noff sort.coff sort
 
-	ascii.o: ascii.c
+ascii.o: ascii.c
 	$(CC) $(CFLAGS) -c ascii.c
 ascii: ascii.o start.o
 	$(LD) $(LDFLAGS) start.o ascii.o -o ascii.coff
 	../bin/coff2noff ascii.coff ascii
 
-	test.o: test.c
+test.o: test.c
 	$(CC) $(CFLAGS) -c test.c
 test: test.o start.o
 	$(LD) $(LDFLAGS) start.o test.o -o test.coff

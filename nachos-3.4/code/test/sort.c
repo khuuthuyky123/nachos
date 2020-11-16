@@ -9,24 +9,57 @@
 
 #include "syscall.h"
 
-int A[1024];	/* size of physical memory; with code, we'll run out of space!*/
+	/* size of physical memory; with code, we'll run out of space!*/
+
 
 int
 main()
 {
-    int i, j, tmp;
+    int A[100];
+    int i, j, tmp ,t;
+    int n; 
+    char choose;
+    PrintString("Nhap vao so luong phan tu cua array: ");
+    n = ReadInt();
+    for (i = 0; i < n; i++)
+	{
+        PrintString("Nhap phan tu: ");
+        A[i] = ReadInt();
+            //A[i] = t;
+	}
 
-    /* first initialize the array, in reverse sorted order */
-    for (i = 0; i < 1024; i++)		
-        A[i] = 1024 - i;
-
-    /* then sort! */
-    for (i = 0; i < 1023; i++)
-        for (j = i; j < (1023 - i); j++)
-	   if (A[j] > A[j + 1]) {	/* out of order -> need to swap ! */
-	      tmp = A[j];
-	      A[j] = A[j + 1];
-	      A[j + 1] = tmp;
-    	   }
-    Exit(A[0]);		/* and then we're done -- should be 0! */
+    PrintString("Sort tang dan hay giam dan: \n1.Tang dan\n2.Giam dan\nLua chon: ");
+    choose = ReadChar();
+    
+    if (choose == '1')
+    {
+    
+        for (i = 0; i < n-1; i++)
+            for (j = i; j < n; j++)
+                if (A[j] < A[i]) 
+                {	/* out of order -> need to swap ! */
+                    tmp = A[j];
+                    A[j] = A[i];
+                    A[i] = tmp;
+                }
+    }
+    else if (choose == '2')
+        {
+            for (i = 0; i < n-1; i++)
+                for (j = i; j < n; j++)
+                    if (A[j] > A[i]) 
+                    {	/* out of order -> need to swap ! */
+                        tmp = A[j];
+                        A[j] = A[i];
+                        A[i] = tmp;
+                    }
+        }
+    // then print A[]
+    PrintString("Array sau khi sort: ");
+    for (i = 0; i < n; i++)
+    {
+	    PrintInt(A[i]);
+        PrintChar(' ');
+    }
+    return 0;
 }

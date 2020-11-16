@@ -363,39 +363,41 @@ void ExceptionHandler(ExceptionType which)
 
 		case SC_ReadString:{
 			int virtAddr, length;
-			char* buffer;
+			char *buffer;
 			// Lay tham so ten tap tin to thanh ghi r4
 			virtAddr = machine->ReadRegister(4);
-			
+
 			// Lay do dai toi da cua chuoi nhap vao thu thanh ghi r5
 			length = machine->ReadRegister(5);
-			
+
 			//Copy chuoi tu User Space sang System Space
 			buffer = User2System(virtAddr, length);
-			
+
 			//Doc chuoi
 			gSynchConsole->Read(buffer, length);
-
+			System2User(virtAddr, length, buffer);
 			delete buffer;
 			break;
 		}
 
 		case SC_PrintString:
 		{
-			// Làm tạm để test
-			int virtAddr;
-			int length;
+			int virtAddr, length;
 			char *buffer;
 			length = 0;
-			
+			// Lay tham so ten tap tin to thanh ghi r4
 			virtAddr = machine->ReadRegister(4);
-			
+
+			//Copy chuoi tu User Space sang System Space
 			buffer = User2System(virtAddr, 255);
+
+			//Tinh do dai that cua chuoi
 			while (buffer[length] != 0)
 				length++;
 
+			//In chuoi
 			gSynchConsole->Write(buffer, length + 1);
-			
+			// nguoi dung thanh cong
 			delete buffer;
 			break;
 		}
