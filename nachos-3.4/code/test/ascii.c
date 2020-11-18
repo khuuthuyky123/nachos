@@ -8,12 +8,12 @@ int main()
     PrintString("\n\t|-----------------------------------------------|");
     PrintString("\n\t|   Cac ky tu co the in duoc cua bang ma ASCII\t|");
     PrintString("\n\t|\t\t\t\t\t\t|\n");
-    for (i = 32; i<127 ; i++)
+    for (i = 32; i<127 ; i++) //Vong lap cac ky tu co the in duoc cua bang ma ASCII
     {
         PrintString("\t|\t");
-        for (j=i;j<i+15 && j<127;j++)
+        for (j=i;j<i+15 && j<127;j++) //VOng lap in 16 ky tu roi xuong dong
         {
-            PrintChar((char)(j));
+            PrintChar((char)(j)); // In ky tu ASCII 
             PrintChar(' ');
         }
         PrintString("  \t|\n");

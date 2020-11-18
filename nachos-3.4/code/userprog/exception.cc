@@ -50,21 +50,26 @@
 //	are in machine.h.
 //----------------------------------------------------------------------
 
-// Input: - User space address (int)
-// - Limit of buffer (int)
-// Output:- Buffer (char*)
-// Purpose: Copy buffer from User memory space to System memory space
+// Input: Địa chỉ của vùng nhớ trên user chứa dữ liệu
+// 	  Kích cỡ tối đa vùng nhớ
+// Output:Dữ liệu được đọc ở dạng chuỗi kí tự, trỏ đến bằng con trỏ char*
+// Chức năng: Chuyển dữ liệu từ User Space sang Kernel Space
 char *User2System(int virtAddr, int limit)
 {
-	int i;
-	int ch;
-	char *kernelBuf = NULL;
-	kernelBuf = new char[limit + 1];
+	// Input: virtAddr: khong gian dia chi User (int), 
+	// limit: gioi han cua buffer(int)
+	int i; // Khai bao bien dem
+	int ch; // Khai bao ky tu 
+	char *kernelBuf = NULL; //Khai bao chuoi 
+	kernelBuf = new char[limit + 1]; //Can cho cho terminal
+
 	if (kernelBuf == NULL)
 	{
 		return kernelBuf;
 	}
+
 	memset(kernelBuf, 0, limit + 1);
+
 	for (i = 0; i < limit; ++i)
 	{
 		machine->ReadMem(virtAddr + i, 1, &ch);
@@ -72,11 +77,21 @@ char *User2System(int virtAddr, int limit)
 		if (ch == 0)
 			break;
 	}
+
 	return kernelBuf;
 }
 
+// Input: Địa chỉ của vùng nhớ trên user nhận dữ liệu
+// 	  Kích cỡ bộ đệm
+//	  Con trỏ tới bộ đệm
+// Output:Dữ liệu được đọc trả về cho User có kích cỡ là int
+// Chức năng: Chuyển dữ liệu từ Kernel Space sang User Space
 int System2User(int virtAddr, int len, char *buffer)
 {
+	// Input: virtAddr: Khong gian vung nho User(int), 
+	// len: gioi han cua buffer(int), 
+	// buffer: bo nho dem buffer(char*)
+
 	if (len < 0)
 		return -1;
 	if (len == 0)
@@ -100,50 +115,77 @@ void IncreasePC()
 	machine->WriteRegister(PCReg, counter);
 	machine->WriteRegister(NextPCReg, counter + 4);
 }
+
+// Input: 	num: số nguyên cần chuyển
+// Output:	Chuỗi tương ứng
+// Chức năng:	chuyển số thành chuỗi tương ứng, trỏ đến bằng con trỏ char
 char* Int2Str(int num);
+
+// Input: 	buffer: con trỏ đến bộ đệm char, 
+//		length: chiều dài của bộ đệm, 
+//		error: con trỏ đến mã lỗi khi chạy hàm
+// Output:	số nguyên chuyển được
+// Chức năng:	chuyển số thành chuỗi tương ứng, trỏ đến bằng con trỏ char
 int Str2Int(char* buffer, int length,int* error)
 {
-	int num = 0;
-	int curPos = 0;
-	int startPos = 0;
-	int sign = 0;
-	char* limit;
-	*error = 0;
+	int num = 0;		// kết quả trả về
+	int curPos = 0;		// vị trí hiện tại đang xét
+	int startPos = 0; 	// vị trí đầu tiên của phần giá trị số
+	int sign = 0;		// dấu của số.
+				// '-' là 1. '+' là 0
+	char* limit;		// giới hạn của số nguyên. Có thể là MAXINT hoặc MININT
+	*error = 0;		// mã lỗi mặc định là 0
 	
+	// Nếu kí tự đầu tiên là '-' hoặc '+' thì cập nhật biến sign, curPos và StartPos.
 	if (buffer[0]=='-')
 	{
-		startPos = 1;
-		curPos = 1;
-		sign = 1;
+		startPos = 1; 	// bắt đầu đọc từ vị trí 1 do bỏ qua kí tự dấu
+		curPos = 1;	// vị trí hiện tại là 1
+		sign = 1;	// dấu là '-'
 	}
 	else 
 		if (buffer[0]=='+')
 		{
-			startPos = 1;
-			curPos = 1;
-			sign = 0;
+			startPos = 1; 	// bắt đầu đọc từ vị trí 1 do bỏ qua kí tự dấu
+			curPos = 1;	// vị trí hiện tại là 1
+			sign = 0;	// dấu là '+'
 		}
 
+	// Đọc đến hết chuỗi cập nhật curPos
 	while (buffer[curPos]>='0' && buffer[curPos]<='9')
 		curPos++;
 	
+	//Nếu curPos không ở cuối chuỗi nghĩa là đã có kí tự khác kí tự số. Mã lỗi = 2
 	if (curPos < length)
 	{
 		*error = 2;
 	}
 	else
 	{
+		// Xét các trường hợp tràn số, số có các dạng:
+		//
+		// TH1_1:  21..231	-> dấu bằng 0, chiều dài chuỗi bằng 10 (là chiều dài MAXINT)
+		// TH1_2:  21..231	-> dấu bằng 0, chiều dài chuỗi lớn hơn 10 (là chiều dài MAXINT)
+		// TH2_1: -21..231	-> dấu bằng 1, chiều dài chuỗi bằng 11 (là chiều dài MININT)
+		// TH2_2: -21..231	-> dấu bằng 1, chiều dài chuỗi lớn hơn 11 (là chiều dài MININT)
+		// TH3_1: +21..312	-> dấu bằng 1, chiều dài chuỗi bằng 11 (là chiều dài MAXINT)
+		// TH3_2: +21..312	-> dấu bằng 1, chiều dài chuỗi lớn hơn 11 (là chiều dài MAXINT)
+
+		// TH1_2 và TH2_2
 		if ((startPos==0 && length>10 && sign==0) || (startPos==1 && length>11 && sign==1))
 			*error =1;
 		else 
 		{
+			// TH2_1, TH1_1, TH3_1, TH3_2
 			if ((startPos==1 && length==11) || (startPos==0 && length==10))
 			{
 				if (sign)
 					limit = Int2Str(MININT);
 				else 
 					limit = Int2Str(MAXINT);
-				
+
+				// Tiến hành so sánh từng chữ số trong phần giá trị. 
+				// Nếu kí tự của buffer lớn hơn kí tự của limit thì nghĩa là tràn số.
 				for (curPos=startPos ; curPos<length ; curPos++)
 				{
 					if ((buffer[curPos]-'0')>(limit[curPos+(sign-length+10)*1]-'0'))
@@ -151,6 +193,9 @@ int Str2Int(char* buffer, int length,int* error)
 				}
 				delete limit;
 			}
+
+			// Tới đây vẫn không có lỗi thì số hợp lệ. Tiến hành chuyển đổi
+			//	Chuyển đổi bằng cách lấy từng kí tự của buffer chuyển thành số rồi cộng dồn lại vào kết quả
 			if (*error ==0)
 			{
 				for (curPos=startPos ; curPos<length ; curPos++)
@@ -161,18 +206,26 @@ int Str2Int(char* buffer, int length,int* error)
 		}
 	}
 
+	// Nếu có lỗi thì trả về 0
 	if (*error!=0) 
 		return 0;
+
+	// Nếu không có lỗi thì trả về số tương ứng với dấu
 	if (sign)
 		return (num*(-1));
 	return num;
 }
 
+// Input: 	num: số nguyên cần chuyển
+// Output:	Chuỗi tương ứng
+// Chức năng:	chuyển số thành chuỗi tương ứng, trỏ đến bằng con trỏ char
 char* Int2Str(int num)
 {
-	int length =0;
-	int sign = 0;
-	char* str1 = new char[256];
+	int length =0;			// chiều dài của số
+	int sign = 0;			// dấu của số. số dương sign = 0, số âm sign = 1
+	char* str1 = new char[256];	// chuỗi lưu tạm ban đầu.
+	
+	// Xét trường hợp đặc biệt, số là MININT thì trả thẳng kết quả chuỗi của MININT
 	if (num==MININT)
 	{
 		delete str1;
@@ -181,6 +234,8 @@ char* Int2Str(int num)
 		str[7]='3'; str[8]='6'; str[9]='4'; str[10]='8'; str[11]=0;
 		return str;
 	}
+	
+	// Nếu số <0 thì cập nhật lại sign, length, num, thêm kí tự '-' vào chuỗi kết quả
 	if (num<0)
 	{
 		length = 1;
@@ -189,6 +244,7 @@ char* Int2Str(int num)
 		num *=-1;
 	}
 	else 
+		// Nếu số =0 thì trả thẳng ra chuỗi '0\0'
 		if (num==0)
 		{	
 			delete str1;
@@ -197,7 +253,8 @@ char* Int2Str(int num)
 			str[1]=0;
 			return str;
 		}
-		
+	
+	// Lặp tách từng chữ số từ hàng đơn vị, chuyển thành kí tự và thêm vào mảng kết quả tạm. 
 	while (num!=0)
 	{
 		str1[length++] = (num%10+'0');
@@ -205,9 +262,14 @@ char* Int2Str(int num)
 		if (num==0) 
 		break;
 	}
+	
+	// Như vậy thì mảng tạm sẽ lưu ngược thứ tự với giá trị số. 
+	// Ví dụ số là -678 thì mảng tạm sẽ là -876. 
+	// Do đó phải đảo lại cho đúng
 	char* str = new char[length+1];
 	str[length]=0;
-
+	
+	//Gán dấu nếu là số âm
 	if (sign==1)
 		str[0]=str1[0];
 
@@ -217,8 +279,7 @@ char* Int2Str(int num)
 	}
 
 	delete str1;
-	return str;
-		
+	return str;	
 }
 
 void ExceptionHandler(ExceptionType which)
@@ -282,6 +343,8 @@ void ExceptionHandler(ExceptionType which)
 			interrupt->Halt();
 			break;
 		}
+	
+		// Hàm tạo file mẫu trong file hướng dẫn 
 		case SC_Create:
 		{
 			int virtAddr;
@@ -361,58 +424,86 @@ void ExceptionHandler(ExceptionType which)
 		case SC_Yield:
 			break;
 
+		// SystemCall ReadString
 		case SC_ReadString:{
+			/*
+			Input: buffer: chuoi nhap vao (char*), length: do dai toi da cua chuoi nhap vao (int)
+			Output: Khong co
+			Cong dung: Doc vao mot chuoi voi tham so la buffer va do dai toi da
+			*/
+
 			int virtAddr, length;
 			char *buffer;
-			// Lay tham so ten tap tin to thanh ghi r4
+			// Lay đia chi cua buffer tu thanh ghi r4
 			virtAddr = machine->ReadRegister(4);
 
-			// Lay do dai toi da cua chuoi nhap vao thu thanh ghi r5
+			// Lay do dai toi da cua chuoi nhap vao tu thanh ghi r5
 			length = machine->ReadRegister(5);
 
-			//Copy chuoi tu User Space sang System Space
+			//Copy chuoi tu User Space sang Kernel Space
 			buffer = User2System(virtAddr, length);
 
-			//Doc chuoi
-			gSynchConsole->Read(buffer, length);
-			System2User(virtAddr, length, buffer);
+			gSynchConsole->Read(buffer, length); //Goi ham Read cua SynchConsole de doc chuoi
+
+			//Copy chuoi tu Kernel Space sang User Space
+			System2User(virtAddr, length, buffer); 
 			delete buffer;
+			IncreasePC();
 			break;
 		}
 
+		//System Call PrintString
 		case SC_PrintString:
 		{
+			/*
+			Input: buffer: chuoi nhap vao (char*)
+			Output: chuoi doc duoc tu buffer
+			Cong dung: In ra mot chuoi voi tham so la buffer
+			*/
 			int virtAddr, length;
 			char *buffer;
 			length = 0;
-			// Lay tham so ten tap tin to thanh ghi r4
+			// Lay dia chi cua buffer tu thanh ghi r4
 			virtAddr = machine->ReadRegister(4);
 
-			//Copy chuoi tu User Space sang System Space
+			//Copy chuoi tu User Space sang Kernel Space
 			buffer = User2System(virtAddr, 255);
 
 			//Tinh do dai that cua chuoi
 			while (buffer[length] != 0)
 				length++;
 
-			//In chuoi
+			//In chuoi bang cach goi ham Write cua SynchConsole
 			gSynchConsole->Write(buffer, length + 1);
-			// nguoi dung thanh cong
 			delete buffer;
+			IncreasePC();
 			break;
 		}
 		
+		// System Call ReadInt
 		case SC_ReadInt:
-		{
-			int *error = new int;
-			char *buffer= new char[256];
-			int length = gSynchConsole->Read(buffer,255);
-			int num = Str2Int(buffer,length,error);
-			if (*error==1)
+		{	
+			// 	Nguyên mẫu hàm: int ReadInt();
+			// 		 Input:	Không có
+			// 		Output: Số nguyên
+			// 	     Chức năng:	Đọc số nguyên nhập từ bàn phím
+			//
+			int *error = new int; 		// Khởi tạo biến chứa mã lỗi
+			char *buffer= new char[256];	// Khởi tạo bộ nhớ đệm
+			int length = gSynchConsole->Read(buffer,255);	// đọc chuỗi từ Console vào bộ đệm, trả về chiều dài bộ đệm là length
+			int num = Str2Int(buffer,length,error);		// Gọi hàm chuyển chuỗi thành số
+	
+			// mã lỗi 1 nghĩa là tràn số
+			// mã lỗi 2 nghĩa là nhập vào không phải số
+			if (*error==1)	
 				printf("\nSo nguyen nhap vao phai nam trong khoang [%d,%d]\n",MININT,MAXINT);
 			if (*error==2)
 				printf("\nChuoi so nguyen vua nhap co chua ki tu. Vui long nhap so nguyen 4 bytes hop le\n");
+			
+			// ghi kết quả ra thanh ghi 2, là thanh ghi chứa địa chỉ trả về của hàm
 			machine->WriteRegister(2,num);
+	
+			// Giải phóng các vùng nhớ cấp phát động
 			delete buffer;
 			delete error;
 			break;
@@ -420,21 +511,32 @@ void ExceptionHandler(ExceptionType which)
 		
 		case SC_PrintInt:
 		{	
-			int num;
-			int length=0;
-			char *buffer;
-			num = machine->ReadRegister(4);
-			buffer = Int2Str(num);
+			// 	Nguyên mẫu hàm: void PrintInt(int num);
+			// 		 Input:	số nguyên
+			// 		Output: không có
+			// 	     Chức năng:	In số nguyên ra màn hình Console
+			//
+			int num;	// số nguyên 
+			int length=0;	// chiều dài bộ đệm
+			char *buffer;	// bộ đệm
+			num = machine->ReadRegister(4); // đọc số nguyên từ thanh ghi
+			buffer = Int2Str(num);		// Gọi hàm đổi số thành chuỗi
+			
+			// Tính chiều dài bộ đệm
 			while (buffer[length] != 0)
 				length++;
+			
+			// In bộ đệm ra Console
 			gSynchConsole->Write(buffer, length+1);
+			
+			// Giải phóng bộ đệm
 			delete buffer;
 			break;
 		}
 
 		case SC_ReadChar:
 		{
-		//Input: Khong co
+			//Input: Khong co
 			//Output: Duy nhat 1 ky tu (char)
 			//Cong dung: Doc mot ky tu tu nguoi dung nhap
 			int maxBytes = 255;
@@ -484,6 +586,7 @@ void ExceptionHandler(ExceptionType which)
 			break;
 		}
 		}
+		// Tăng program counter để không bị loop.
 		IncreasePC();
 	}
 	}
