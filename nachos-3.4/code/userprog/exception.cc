@@ -448,7 +448,6 @@ void ExceptionHandler(ExceptionType which)
 			//Copy chuoi tu Kernel Space sang User Space
 			System2User(virtAddr, length, buffer); 
 			delete buffer;
-			IncreasePC();
 			break;
 		}
 
@@ -476,7 +475,6 @@ void ExceptionHandler(ExceptionType which)
 			//In chuoi bang cach goi ham Write cua SynchConsole
 			gSynchConsole->Write(buffer, length + 1);
 			delete buffer;
-			IncreasePC();
 			break;
 		}
 		
@@ -545,14 +543,14 @@ void ExceptionHandler(ExceptionType which)
 
 			if(numBytes > 1) //Neu nhap nhieu hon 1 ky tu thi khong hop le
 			{
-				printf("Chi duoc nhap duy nhat 1 ky tu!");
-				DEBUG('a', "\nERROR: Chi duoc nhap duy nhat 1 ky tu!");
+				printf("Chi duoc nhap duy nhat 1 ky tu!\n");
+				//DEBUG('a', "\nERROR: Chi duoc nhap duy nhat 1 ky tu!");
 				machine->WriteRegister(2, 0);
 			}
 			else if(numBytes == 0) //Ky tu rong
 			{
-				printf("Ky tu rong!");
-				DEBUG('a', "\nERROR: Ky tu rong!");
+				printf("Ky tu rong!\n");
+				//DEBUG('a', "\nERROR: Ky tu rong!");
 				machine->WriteRegister(2, 0);
 			}
 			else
@@ -563,8 +561,6 @@ void ExceptionHandler(ExceptionType which)
 			}
 
 			delete buffer;
-			//IncreasePC(); // error system
-			//return;
 			break;
 		}
 
@@ -575,7 +571,6 @@ void ExceptionHandler(ExceptionType which)
 			// Cong dung: Xuat mot ki tu la tham so arg ra man hinh
 			char c = (char)machine->ReadRegister(4); // Doc ki tu tu thanh ghi r4
 			gSynchConsole->Write(&c, 1); // In ky tu tu bien c, 1 byte
-			//IncreasePC();
 			break;
 
 		}

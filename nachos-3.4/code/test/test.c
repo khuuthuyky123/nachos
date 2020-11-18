@@ -3,12 +3,12 @@
 
 int main()
 {
-    // int a = ReadInt();
-    // PrintInt(a);
+    int a = ReadInt();
+    PrintInt(a);
 
-    int len = 300;
-    char buffer[300];
-    ReadString(buffer,len);
-    PrintString(buffer);
+    // int len = 300;
+    // char buffer[300];
+    // ReadString(buffer,len+1);
+    // PrintString(buffer);
     return 0;
 }
