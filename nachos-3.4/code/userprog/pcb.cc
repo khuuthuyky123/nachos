@@ -1,7 +1,10 @@
 #include "pcb.h"
 #include "utility.h"
+#include "system.h"
 #include "thread.h"
 #include "addrspace.h"
+
+// extern void StartProcess_2(int pID);
 
 PCB::PCB(int id)
 {
@@ -123,22 +126,25 @@ int PCB::Exec(char *filename, int pID)
 
 
 //*************************************************************************************
-void MyStartProcess(int pID)
+
+void MyStartProcess(int id)
 {
-	char *filename= pTab->GetName(pID);
-	AddrSpace *space= new AddrSpace(filename);
+    char* fileName = pTab->GetName(id);
+
+    AddrSpace *space;
+    space = new AddrSpace(fileName);
+
 	if(space == NULL)
 	{
-		printf("\nLoi: Khong du bo nho de cap phat cho tien trinh !!!\n");
-		return; 
+		printf("\nPCB::Exec : Can't create AddSpace.");
+		return;
 	}
-	currentThread->space= space;
 
-	space->InitRegisters();		// set the initial register values
-	space->RestoreState();		// load page table register
+    currentThread->space = space;
 
-	machine->Run();			// jump to the user progam
-	ASSERT(FALSE);			// machine->Run never returns;
-						// the address space exits
-						// by doing the syscall "exit"
+    space->InitRegisters();		
+    space->RestoreState();		
+
+    machine->Run();		
+    ASSERT(FALSE);		
 }

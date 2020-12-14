@@ -3,7 +3,6 @@
 
 #include "thread.h"
 #include "synch.h"
-#include "system.h"
 
 class PCB
 {

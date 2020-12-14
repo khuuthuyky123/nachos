@@ -1,4 +1,5 @@
 #include "ptable.h"
+#include "system.h"
 
 PTable::PTable(int size)
 {

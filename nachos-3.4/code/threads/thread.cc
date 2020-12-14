@@ -40,8 +40,7 @@ Thread::Thread(char* debugName)
     status = JUST_CREATED;
     
     processID = 0;
-    exitStatus = 0;
-    //mTable = new FileTable(MAX_FILE);    
+    exitStatus = 0; 
     //---------------------------------------------------------------------
 
 #ifdef USER_PROGRAM
