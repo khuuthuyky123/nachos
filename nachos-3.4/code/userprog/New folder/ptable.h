@@ -2,7 +2,6 @@
 #define PTABLE_H
 
 #include "bitmap.h"
-#include "system.h"
 #include "pcb.h"
 #include "synch.h"
 
