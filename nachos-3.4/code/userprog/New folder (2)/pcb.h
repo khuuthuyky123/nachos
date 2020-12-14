@@ -3,16 +3,13 @@
 
 #include "thread.h"
 #include "synch.h"
-#include "system.h"
 
 class PCB
 {
 private:
 	Semaphore	*joinsem;	//semaphore cho qua trinh join
 	Semaphore	*exitsem;	//semaphore cho qua trinh exit
-	//Semaphore	*mutex;
-	Semaphore* multex;          // semaphore cho quá trình truy xuất đọc quyền  
-
+	Semaphore	*mutex;
 	int		exitcode;
 	Thread		*thread;
 	int		pid;

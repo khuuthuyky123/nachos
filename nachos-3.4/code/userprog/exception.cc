@@ -398,11 +398,38 @@ void ExceptionHandler(ExceptionType which)
 			break;
 
 		case SC_Exec:
+		{
+			int virtAddr;
+			virtAddr = machine->ReadRegister(4);
+			char* name;
+			name = User2System(virtAddr, MaxFileLength + 1);
+			OpenFile *f = fileSystem->Open(name);
+			//printf("\n%s",name);
+			if(name == NULL)
+			{
+				printf("\n Not enough memory in System");
+				machine->WriteRegister(2, -1);
+				break;
+			}
+			if (f == NULL)
+			{
+				printf("\nKhong the mo duoc file");
+				machine->WriteRegister(2,-1);
+				break;
+			}
+			delete f;
+			int id = pTab->ExecUpdate(name); 
+			machine->WriteRegister(2,id);
+			delete[] name;
 			break;
-
+		}
 		case SC_Join:
+		{
+			int id = machine->ReadRegister(4);
+			int res = pTab->JoinUpdate(id);
+			machine->WriteRegister(2, res);
 			break;
-
+		}
 		case SC_Open:
 			break;
 

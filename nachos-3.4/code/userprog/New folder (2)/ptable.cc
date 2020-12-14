@@ -1,21 +1,16 @@
 #include "ptable.h"
+#include "system.h"
 
 PTable::PTable(int size)
 {
-	if (size < 0)
-		return;
 	int i = 0;
 	psize = size;
 	bm = new BitMap(size);
-	bmsem = new Semaphore("bmsem",1);
+	bmsem = new Semaphore("BMsem",1);
 		
 	for(i = 0 ; i < MAXPROCESS ; ++i)
-		pcb[i] = 0;
+		pcb[i] = NULL;
 	bm->Mark(0);
-	pcb[0] = new PCB(0);
-	pcb[0]->SetFileName("./test/scheduler");
-	pcb[0]->parentID = -1;
-
 }
 
 PTable::~PTable()
@@ -35,22 +30,28 @@ PTable::~PTable()
 int PTable::ExecUpdate(char* filename)
 {
 	bmsem->P();			//chi nap 1 tien trinh vao mot thoi diem
-	if(filename == NULL)
+
+//Kiem tra file co ton tai tren may khong
+	OpenFile *executable = fileSystem->Open(filename);
+	if (executable == NULL) 
 	{
-		printf("\nPTable::Exec : Can't not execute name is NULL.\n");
+		printf("\nUnable to open file %s\n", filename);
 		bmsem->V();
 		return -1;
-	}	
+    	}
+	delete executable;			// close file
+////////////////////////////////////////////////////////////
 
 //Kiem tra chuong trinh duoc goi co la chinh no khong
-	if(!strcmp(filename,"./test/scheduler") || !strcmp(filename,currentThread->getName()))
+	if(!strcmp(filename,currentThread->getName()))
 	{
 		printf("\nLoi: khong duoc phep goi exce chinh no !!!\n");
 		bmsem->V();
 		return -1;
 	}
+////////////////////////////////////////////////////////////
 
-	//Kiem tra con slot trong khong
+//Kiem tra con slot trong khong
 	int ID= GetFreeSlot();
 	if(ID==-1)
 	{
@@ -58,18 +59,7 @@ int PTable::ExecUpdate(char* filename)
 		bmsem->V();
 		return -1;
 	}
-
-//Kiem tra file co ton tai tren may khong
-
-	OpenFile *executable = fileSystem->Open(filename);
-
-	if (executable == NULL) 
-	{
-		printf("\nUnable to open file %s\n", filename);
-		bmsem->V();
-		return -1;
-    }
-	delete executable;			// close file
+////////////////////////////////////////////////////////////
 
 	pcb[ID]= new PCB(ID);
 	bm->Mark(ID);
@@ -93,7 +83,6 @@ int PTable::ExitUpdate(int ec)
 //Neu la main process thi Halt()
 	if(pID==0)
 	{
-		currentThread->FreeSpace();
 		interrupt->Halt();
 		return 0;
 	}
@@ -101,10 +90,14 @@ int PTable::ExitUpdate(int ec)
 
 	pcb[pID]->SetExitCode(ec);
 	
-	pcb[pcb[pID]->parentID]->DecNumWait();
-	pcb[pID]->JoinRelease();
-	pcb[pID]->ExitWait();
-	Remove(pID);	
+	if(pcb[pID]->JoinStatus != -1)
+	{
+		pcb[pID]->JoinRelease();
+		pcb[pID]->ExitWait();
+		Remove(pID);	
+	}
+	else
+		Remove(pID);
 	return ec;
 }
 
@@ -131,7 +124,7 @@ int PTable::JoinUpdate(int pID)
 	}
 /////////////////////////////////////////////////////////////////////////////////////////////
 	
-	pcb[pcb[pID]->parentID]->IncNumWait();
+
 	pcb[pID]->JoinWait(); 	//doi den khi tien trinh con ket thuc
 
 	int ec = pcb[pID]->GetExitCode();

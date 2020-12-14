@@ -1,5 +1,6 @@
 #include "pcb.h"
 #include "utility.h"
+#include "system.h"
 #include "thread.h"
 #include "addrspace.h"
 
@@ -7,16 +8,14 @@ PCB::PCB(int id)
 {
 	joinsem= new Semaphore("JoinSem",0);
 	exitsem= new Semaphore("ExitSem",0);
-	//mutex= new Semaphore("Mutex",1);
-	multex = new Semaphore("multex",1);
-
+	mutex= new Semaphore("Mutex",1);
 	pid= id;
 	exitcode= 0;
 	numwait= 0;
 	if(id)
 		parentID= currentThread->processID;
 	else
-		parentID= -1;
+		parentID= 0;
 	thread= NULL;
 	JoinStatus= -1;
 
@@ -28,10 +27,8 @@ PCB::~PCB()
 		delete joinsem;
 	if(exitsem != NULL)
 		delete exitsem;
-	// if(mutex != NULL)
-	// 	delete mutex;
-	if(multex != NULL)
-		delete multex;
+	if(mutex != NULL)
+		delete mutex;
 }
 
 //------------------------------------------------------------------
@@ -57,18 +54,15 @@ void PCB::SetExitCode(int ec)
 
 void PCB::IncNumWait()
 {
-	multex->P();
 	numwait++;
-	multex->V();
 }
 
 void PCB::DecNumWait()
 {
-	multex->P();
-	if(numwait>0)
+	if(numwait)
 		numwait--;
-	multex->V();
 }
+
 void PCB::SetFileName(char* fn){ strcpy(FileName,fn);}
 
 char* PCB::GetNameThread()
@@ -79,14 +73,14 @@ char* PCB::GetNameThread()
 //-------------------------------------------------------------------
 void PCB::JoinWait()
 {
-	//JoinStatus= parentID;
-	//IncNumWait();
+	JoinStatus= parentID;
+	IncNumWait();
 	joinsem->P();
 }
 
 void PCB::JoinRelease()
 {
-	//DecNumWait();
+	DecNumWait();
 	joinsem->V();
 }
 
@@ -103,21 +97,17 @@ void PCB::ExitRelease()
 //------------------------------------------------------------------
 int PCB::Exec(char *filename, int pID)
 {
-	//mutex->P();
-	multex->P();
+	mutex->P();
 	thread= new Thread(filename);
 	if(thread == NULL)
 	{
 		printf("\nLoi: Khong tao duoc tien trinh moi !!!\n");
-		//mutex->V();
-		multex->V();
+		mutex->V();
 		return -1;
 	}
 	thread->processID= pID;
-	parentID = currentThread->processID;
 	thread->Fork(MyStartProcess,pID);
-	//mutex->V();
-	multex->V();
+	mutex->V();
 	return pID;
 }
 
